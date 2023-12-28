@@ -13,6 +13,7 @@
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -32,13 +33,13 @@
  * on, or negative on error.
  */
 static int
-bindall(const char *servname)
+bindall(const char *servname, bool ipv6)
 {
 	int sock = -1;
 	int ret;
 	struct addrinfo *result, *rp;
 	struct addrinfo hints = {
-		.ai_family = AF_INET6,
+		.ai_family = ipv6 ? AF_INET6 : AF_INET,
 		.ai_socktype = SOCK_STREAM,
 		/* Without AI_PASSIVE we'll get loopback addresses */
 	};
@@ -229,7 +230,7 @@ test_parser(size_t bufsz, struct bc_parser *parser)
 static void
 usage(void)
 {
-	errx(1, "usage: bcproxy [-w file] listening_port");
+	errx(1, "usage: bcproxy [-4] [-w file] listening_port");
 }
 
 extern char *optarg;
@@ -286,11 +287,15 @@ main(int argc, char **argv)
 		return test_parser(BUFSZ, &parser);
 
 	int ch;
-	while ((ch = getopt(argc, argv, "w:")) != -1) {
+	bool ipv6 = true;
+	while ((ch = getopt(argc, argv, "4w:")) != -1) {
 		switch (ch) {
 		case 'w':
 			if ((dumpfd = open(optarg, O_WRONLY|O_CREAT, 0644)) < 0)
 				err(1, "%s", optarg);
+			break;
+		case '4':
+			ipv6 = false;
 			break;
 		default:
 			usage();
@@ -307,7 +312,7 @@ main(int argc, char **argv)
 	    &(const struct sigaction) { .sa_handler = SIG_IGN, .sa_flags = SA_RESTART },
 	    NULL);
 
-	listenfd = bindall(argv[0]);
+	listenfd = bindall(argv[0], ipv6);
 	if (listenfd < 0)
 		goto exit;
 	if (listen(listenfd, 0) == -1)
