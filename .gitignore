@@ -7,3 +7,6 @@
 /config/out
 /libressl-*
 /version.h
+/tf-container/logs
+/tf-container/worlds
+__pycache__
