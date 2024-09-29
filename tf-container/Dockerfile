@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install -y bmake make git gcc curl groff-base libtls-dev python3-dev libpcre3-dev libicu-dev pkg-config libncurses-dev
+RUN apt-get update && apt-get install -y bmake make git gcc curl groff-base libtls-dev python3-dev libpcre3-dev libicu-dev pkg-config libncurses-dev tmux
 
 # install bcproxy
 
@@ -24,9 +24,11 @@ RUN ./configure --enable-python --disable-inet6 --disable-mailcheck --disable-ss
 RUN make
 RUN make install
 
+# unix socket location
+RUN mkdir /run/bcproxy-tf
 
 WORKDIR /usr/local/share/tf-lib
 
-COPY entrypoint.sh /entrypoint.sh
+COPY container-configs/* /usr/local/etc/
 
-ENTRYPOINT /entrypoint.sh
+CMD tmux new-session "tmux source-file /usr/local/etc/tmux.conf"
