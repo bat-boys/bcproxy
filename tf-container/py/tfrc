@@ -1,0 +1,8 @@
+/load py/gag-bcproxy-tags.tf
+/def WORLDFILE = worlds/worlds.tf
+/loadworld
+
+/python_load py.global_state
+/python_load py.chat
+
+/hook LOGIN = /python_call py.tfutils.on_login

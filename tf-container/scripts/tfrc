@@ -1,6 +1,0 @@
-/load py/gag-bcproxy-tags.tf
-
-/python_load py.tfutils
-
-/def WORLDFILE = worlds/worlds.tf
-/loadworld

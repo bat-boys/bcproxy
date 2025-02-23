@@ -29,6 +29,14 @@ RUN mkdir /run/bcproxy-tf
 
 WORKDIR /usr/local/share/tf-lib
 
-COPY container-configs/* /usr/local/etc/
+# overwrite dummy tf.py with a python 3 compatible version
+COPY py/tf.py tf.py
 
-CMD tmux new-session "tmux source-file /usr/local/etc/tmux.conf"
+# config location, will be mounted from host
+RUN mkdir /usr/local/etc/confs
+
+ENV TERM=screen-256color
+ENV COLORTERM=truecolor
+
+# -u is to force tmux to use utf-8 even if it doesn't believe it's supported
+CMD tmux -u -2 new-session "tmux source-file /usr/local/etc/confs/tmux.conf"

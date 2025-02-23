@@ -17,6 +17,8 @@ Käynnistä kontti:
 
 Tää ei yhdistä battiin automaattisesti että on mahdollisuus käyttää secondaryjä.
 
+tmuxista poistuminen `ctrl-b :kill-session`
+
 ## Python-deviympäristö
 
 [Install UV](https://docs.astral.sh/uv/#getting-started)
