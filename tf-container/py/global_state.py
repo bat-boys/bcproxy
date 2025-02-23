@@ -10,7 +10,7 @@ class State(NamedTuple):
     char_race: str | None
 
 
-STATE = State(None, None, None)
+GLOBAL_STATE = State(None, None, None)
 
 WHOAMI_RE = re.compile(
     r"^You are (.+), a level ([^ ]+) (.+?)( and your (primary|secondary) is (.+))?.$"
@@ -21,12 +21,14 @@ WHOAMI_RE = re.compile(
 
 
 def whoami_cb(s: str):
-    global STATE
+    global GLOBAL_STATE
     if match := WHOAMI_RE.match(s):
-        STATE = STATE._replace(char_name=match.group(1))
-        STATE = STATE._replace(char_level=parse_level(match.group(2)))
-        STATE = STATE._replace(char_race=match.group(3))
-        tfprint(f"state: {STATE}")
+        GLOBAL_STATE = GLOBAL_STATE._replace(
+            char_name=match.group(1),
+            char_level=parse_level(match.group(2)),
+            char_race=match.group(3),
+        )
+        tfprint(f"state: {GLOBAL_STATE}")
 
 
 def on_login(_s: str):

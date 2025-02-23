@@ -5,4 +5,4 @@
 /python_load py.global_state
 /python_load py.chat
 
-/hook LOGIN = /python_call py.tfutils.on_login
+/hook LOGIN = /python_call py.global_state.on_login

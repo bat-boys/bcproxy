@@ -1,10 +1,10 @@
 import re
 from asyncio import run
-from typing import NamedTuple
 
 
 from py.color import color_from_string, colorize
-from py.tfutils import TriggerMatching, TriggerPriority, tfprint, trigger
+from py.global_state import GLOBAL_STATE
+from py.tfutils import TriggerPriority, tfprint, trigger
 from py.sockets import (
     ChannelMessage,
     Socket,
@@ -14,23 +14,8 @@ from py.sockets import (
     socket_server,
 )
 
-# /trigger chan_tell: Ruska tells you 'hello'
-
-TELL_RE = re.compile(r"^chan_tell: (.+) tells? (.+) '(.+)'$")
-CHANNEL_RE = re.compile(r"^chan_([a-z+-]+): (.+) .[a-z+-]+.: (.+)$")
-
-
-class State(NamedTuple):
-    whoami: str | None
-    enabled_channels: list[str] = ["party", "spark+"]
-
-
-STATE = State("Astrax")
-
-
-def update_whoami(whoami: str):
-    global STATE
-    STATE = STATE._replace(whoami=whoami)
+TELL_RE = re.compile(r"^chan_tell: (.+?) tells? (.+?) '(.+)'$")
+CHANNEL_RE = re.compile(r"^chan_([a-z+-]+): (.+?) .[a-z+-]+?.: (.+)$")
 
 
 def parse_receivers(receivers: str) -> list[str]:
@@ -56,10 +41,10 @@ def tell_cb(s: str):
 
 def channel_cb(s: str):
     if match := CHANNEL_RE.match(s):
-        msg_sender = match.group(1)
-        channel = match.group(2)
+        channel = match.group(1)
+        msg_sender = match.group(2)
         message = match.group(3)
-        if msg_sender == STATE.whoami:
+        if msg_sender == GLOBAL_STATE.char_name:
             msg = ChannelMessage("you", channel, message)
         else:
             msg = ChannelMessage(msg_sender, channel, message)
