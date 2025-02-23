@@ -21,6 +21,7 @@ RUN git clone https://github.com/bat-boys/tinyfugue.git
 WORKDIR /tinyfugue
 
 RUN ./configure --enable-python --disable-inet6 --disable-mailcheck --disable-ssl
+RUN sed -i 's/NameError, TypeError/NameError, TypeError, AttributeError/g' src/tfpython.c
 RUN make
 RUN make install
 
