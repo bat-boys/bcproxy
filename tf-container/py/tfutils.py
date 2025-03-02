@@ -10,7 +10,7 @@ class TriggerMatching(StrEnum):
 
 
 class TriggerPriority(IntEnum):
-    BCPROXY_MESSAGE = 22
+    BCPROXY = 22  # from gag-bcproxy-tags.tf
 
 
 def tfprint(s: str):
@@ -30,7 +30,7 @@ def trigger(
 ):
     if isinstance(pattern, Pattern):
         matching = TriggerMatching.REGEXP
-        pattern = pattern.pattern.replace("$", "\\$")
+        pattern = pattern.pattern.replace("\\", "\\\\").replace("$", "\\$")
     elif "*" in pattern:
         matching = TriggerMatching.GLOB
     else:
@@ -70,6 +70,15 @@ def parse_level(s: str) -> int | None:
         return int(s)
     except ValueError:
         return roman_numerals.get(s, None)
+
+
+def stringify(s: str | int | None, prefix: str = "", suffix: str = "") -> str:
+    """
+    Return a string with optional prefix and suffix or empty string if input is None
+    """
+    if s is None:
+        return ""
+    return f"{prefix}{s}{suffix}"
 
 
 def initialize():

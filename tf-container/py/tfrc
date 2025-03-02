@@ -6,3 +6,4 @@
 /python_load py.chat
 
 /hook LOGIN = /python_call py.global_state.on_login
+/def -h`PROMPT PROMPT:>` prompt_hook = /test prompt("")

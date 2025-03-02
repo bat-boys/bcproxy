@@ -18,6 +18,12 @@ YELLOW = Color(0xFF, 0xFF, 0)
 WHITE = Color(0xFF, 0xFF, 0xFF)
 
 
+def colorize_maybe(
+    s: str | None, color: Color | None, bg_color: Color | None = None
+) -> str | None:
+    return colorize(s, color, bg_color) if s is not None else None
+
+
 def colorize(s: str, color: Color | None, bg_color: Color | None = None) -> str:
     """
     Colorize a string with the given color and background color for printing
@@ -38,7 +44,10 @@ def colorize(s: str, color: Color | None, bg_color: Color | None = None) -> str:
     return f"{begin}{s}{reset}"
 
 
-def color_from_string(s: str) -> Color:
+def color_from_string(s: str | None) -> Color | None:
+    if s is None:
+        return None
+
     hash_obj = sha256(s.encode())
 
     def compress(i: int) -> int:

@@ -25,9 +25,9 @@ def parse_receivers(receivers: str) -> list[str]:
     return names
 
 
-async def sender(message: TellMessage | ChannelMessage):
+async def sender(msg: TellMessage | ChannelMessage):
     async with socket_client(Socket.CHAT) as (_, writer):
-        await send_object(writer, message)
+        await send_object(writer, msg)
 
 
 def tell_cb(s: str):
@@ -53,8 +53,8 @@ def channel_cb(s: str):
 
 
 def init_tf():
-    trigger(TELL_RE, "chat.tell_cb", TriggerPriority.BCPROXY_MESSAGE)
-    trigger(CHANNEL_RE, "chat.channel_cb", TriggerPriority.BCPROXY_MESSAGE)
+    trigger(TELL_RE, "chat.tell_cb", TriggerPriority.BCPROXY)
+    trigger(CHANNEL_RE, "chat.channel_cb", TriggerPriority.BCPROXY)
     tfprint("Loaded chat")
 
 
@@ -91,6 +91,8 @@ def receiver(msg: TellMessage | ChannelMessage):
     elif isinstance(msg, ChannelMessage):
         server_print_channel(msg)
 
+
+# the same script is run both inside tf and as a standalone chat-window server
 
 if __name__ == "__main__":
     run(socket_server(Socket.CHAT, sender, receiver))

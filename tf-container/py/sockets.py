@@ -31,7 +31,7 @@ T = TypeVar("T")
 
 async def socket_server(
     socket: Socket,
-    _sender: Callable[[T], Coroutine[Any, Any, None]],
+    _sender: Callable[[T], Coroutine[Any, Any, None]],  # for type checking
     receiver: Callable[[T], None],
 ):
     async def callback(reader: StreamReader, _: StreamWriter):

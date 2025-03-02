@@ -19,6 +19,18 @@ Tää ei yhdistä battiin automaattisesti että on mahdollisuus käyttää secon
 
 tmuxista poistuminen `ctrl-b :kill-session`
 
+## Batmud configuration
+
+Batmud configuration is almost the same as with GgrTF, only eqset added to `sc`:
+
+```
+cutter 9999
+sc set H:{colorhp}/<maxhp> [{diffhp}] S:{colorsp}/<maxsp> [{diffsp}] E:{colorep}/<maxep> [{diffep}] $:<cash> [{diffcash}] exp:<exp> [{diffexp}] eqset:<eqset>
+sc on
+prompt PROMPT:>
+```
+
+
 ## Python-deviympäristö
 
 [Install UV](https://docs.astral.sh/uv/#getting-started)
