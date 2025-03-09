@@ -53,8 +53,8 @@ def channel_cb(s: str):
 
 
 def init_tf():
-    trigger(TELL_RE, "chat.tell_cb", TriggerPriority.BCPROXY)
-    trigger(CHANNEL_RE, "chat.channel_cb", TriggerPriority.BCPROXY)
+    trigger(TELL_RE, tell_cb, TriggerPriority.BCPROXY)
+    trigger(CHANNEL_RE, channel_cb, TriggerPriority.BCPROXY)
     tfprint("Loaded chat")
 
 
@@ -68,7 +68,7 @@ def server_print_tell(msg: TellMessage):
     )
 
     if msg.sender == "you" or msg.sender == "You":
-        print(f"{receivers} < {msg.message}")
+        print(f"> {receivers} {msg.message}")
     elif msg.receivers == ["you"] or msg.receivers == ["You"]:
         print(f"{sender} > {msg.message}")
     else:
@@ -80,7 +80,7 @@ def server_print_channel(msg: ChannelMessage):
     channel = colorize(msg.channel, color_from_string(msg.channel))
 
     if msg.sender == "you" or msg.sender == "You":
-        print(f"[{channel}] < {msg.message}")
+        print(f"> [{channel}] {msg.message}")
     else:
         print(f"{sender} [{channel}]: {msg.message}")
 

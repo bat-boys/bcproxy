@@ -7,6 +7,7 @@ from typing import Any, AsyncIterator, Callable, Coroutine, NamedTuple, TypeVar
 
 class Socket(StrEnum):
     CHAT = "/run/bcproxy-tf/chat.sock"
+    PARTY = "/run/bcproxy-tf/party.sock"
 
 
 # Message types have to be defined in this file so that message type checking
@@ -24,6 +25,10 @@ class ChannelMessage(NamedTuple):
     sender: str
     channel: str
     message: str
+
+
+class PartyUpdate(NamedTuple):
+    pass
 
 
 T = TypeVar("T")

@@ -1,9 +1,12 @@
-/load py/gag-bcproxy-tags.tf
 /def WORLDFILE = worlds/worlds.tf
 /loadworld
 
+/load py/gag-bcproxy-tags.tf
 /python_load py.global_state
 /python_load py.chat
+/python_load py.binds
 
-/hook LOGIN = /python_call py.global_state.on_login
+;; load per-character commands from tfrc-<world name>
+/hook LOGIN = /load py/tfrc-%{1}%;/python_call py.global_state.on_login
+
 /def -h`PROMPT PROMPT:>` prompt_hook = /test prompt("")

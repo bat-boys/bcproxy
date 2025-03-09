@@ -1,6 +1,8 @@
 from enum import IntEnum, StrEnum
+import hashlib
+import base64
 from tf import eval  # type: ignore
-from typing import Pattern
+from typing import Callable, Pattern
 
 
 class TriggerMatching(StrEnum):
@@ -24,9 +26,10 @@ def tfeval(s: str):
 
 def trigger(
     pattern: str | Pattern[str],
-    callback: str,
+    callback: Callable[[str], None],
     priority: int = 10,
     gag: bool = False,
+    callback_param: str = "\\%*",
 ):
     if isinstance(pattern, Pattern):
         matching = TriggerMatching.REGEXP
@@ -36,10 +39,40 @@ def trigger(
     else:
         matching = TriggerMatching.SIMPLE
 
-    gag_flags = "-agGL" if gag else ""
-    cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} -t`{pattern}` py.{callback} = /python_call py.{callback} \\%*"
+    gag_flags = "-ag" if gag else ""
+    callback_fn_str = f"{callback.__module__}.{callback.__name__}"
+    cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
     tfprint(cmd)
     tfeval(cmd)
+
+
+def short_hash(s: str | list[str]) -> str:
+    if isinstance(s, list):
+        s = " ".join(s)
+    hashed = hashlib.sha256(s.encode()).digest()
+    b64 = base64.urlsafe_b64encode(hashed).decode("utf-8")
+    return b64[:12]
+
+
+def substitute_enumerable(strs: list[str]) -> None:
+    N = len(strs)
+    hash = short_hash(strs)
+    tf_match_str = "\\%{*}"
+    for n, s in enumerate(strs):
+        cmd = f"/def -i -p4 -msimple -t`{s}` enumerate_{hash}_{n} = /substitute {tf_match_str} ({n + 1}/{N})"
+        tfprint(cmd)
+        tfeval(cmd)
+
+
+def gag(strs: str | list[str]) -> None:
+    if not isinstance(strs, list):
+        strs = [strs]
+    hash = short_hash(strs)
+
+    for n, s in enumerate(strs):
+        cmd = f"/def -i -p3 -msimple -ag -t`{s}` gag_{hash}_{n}"
+        tfprint(cmd)
+        tfeval(cmd)
 
 
 def parse_level(s: str) -> int | None:
@@ -101,3 +134,10 @@ def initialize():
     # "/def -F -agGL -p10 -c0 -mregexp -t`"
     # + ".+[0-9]: (.+)\$"
     # + "` eqinfo_eqnumber = /python_call eqshoppe.eqinfo \%P1",
+
+
+def maybe_int(s: str) -> int | None:
+    try:
+        return int(s)
+    except ValueError:
+        return None

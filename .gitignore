@@ -9,4 +9,5 @@
 /version.h
 /tf-container/logs
 /tf-container/worlds
+/tf-container/py/tfrc-*
 __pycache__

@@ -30,6 +30,27 @@ sc on
 prompt PROMPT:>
 ```
 
+Monster coloring
+
+```
+term truecolor
+ansi regmons #50FF50
+ansi woundedmons #50D050
+ansi aggrmons #FF5050
+ansi woundedaggrmons #D05050
+```
+
+## Triggers
+
+General priorities:
+
+- 22: bcproxy messages
+- 20: gag bcproxy messages, no fall-through
+- 10: default
+- 4: enumerable strings
+- 3: gags
+- 2: monsters
+
 
 ## Python-deviympäristö
 
