@@ -11,8 +11,7 @@
 #include "proxy.h"
 #include "room.h"
 
-/* U+2234 THEREFORE */
-#define MARKER "\\\xe2\x88\xb4"
+#define MARKER "#BCPROXY#"
 
 struct
 proxy_state *proxy_state_new(size_t bufsize, struct db *db)
