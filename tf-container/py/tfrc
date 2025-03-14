@@ -1,3 +1,17 @@
+/set log_prefix=
+/set pedantic=off
+/histsize 10000
+
+; from kbd-xterm.tf
+/def -i key_up = /dokey recallb
+/def -i key_down = /dokey recallf
+/def -i key_nkpEnt = /dokey newline
+/def -i -b'^[[7~' = /dokey home
+/def -i -b'^[[8~' = /dokey end
+/def -i -b'^[Od' = /dokey wleft
+/def -i -b'^[Oc' = /dokey wright
+/def -i key_tab = /complete
+
 /def WORLDFILE = worlds/worlds.tf
 /loadworld
 

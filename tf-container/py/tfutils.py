@@ -24,6 +24,19 @@ def tfeval(s: str):
     eval(s)
 
 
+def trigger_bcproxy(
+    bcproxy_message_type: str,
+    callback: Callable[[str], None],
+    simple: bool = False,
+):
+    if simple:
+        pattern = f"#BCPROXY#{bcproxy_message_type}"
+    else:
+        pattern = f"#BCPROXY#{bcproxy_message_type} *"
+
+    trigger(pattern, callback, TriggerPriority.BCPROXY, callback_param="\\%-1")
+
+
 def trigger(
     pattern: str | Pattern[str],
     callback: Callable[[str], None],

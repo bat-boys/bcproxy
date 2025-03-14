@@ -1,7 +1,14 @@
 import re
 from typing import NamedTuple, Self
 from datetime import datetime
-from py.tfutils import TriggerPriority, parse_level, stringify, tfprint, tfeval, trigger
+from py.tfutils import (
+    parse_level,
+    stringify,
+    tfprint,
+    tfeval,
+    trigger,
+    trigger_bcproxy,
+)
 
 from dataclasses import dataclass
 
@@ -60,8 +67,6 @@ def whoami_cb(s: str):
 # hpstatus 3 10 1 10 0 10
 # hp/hpmax sp/spmax ep/epmax
 
-HPSTATUS_GLOB = "^\\∴hpstatus *"
-
 
 class BCHPStatus(NamedTuple):
     hp: int
@@ -93,27 +98,37 @@ def hpstatus_cb(s: str):
     update_status_sc()
 
 
-CAST_RE = re.compile(r"^\\\∴(cast|use) (.+?) (\d+)$")
+def use_cb(s: str):
+    cast_use_cb(s)
 
 
 def cast_cb(s: str):
+    cast_use_cb(s)
+
+
+def cast_use_cb(s: str):
+    """
+    Cast and use messages are the same but due to how the trigger function
+    works, each must have a separate callback function
+    """
     global GLOBAL_STATE
-    if match := CAST_RE.match(s):
-        duration = int(match.group(3))
+    fields = s.split(" ")
 
-        # batclient message has duration 0 if duration is unknown, in that
-        # case reduce duration by one or let it stay None
-        if duration > 0:
-            updated_duration = duration
-        elif GLOBAL_STATE.cast_duration is not None:
-            updated_duration = GLOBAL_STATE.cast_duration - 1
-        else:
-            updated_duration = None
+    GLOBAL_STATE.cast_spell = fields[0].replace("_", " ")
+    duration = int(fields[1])
 
-        GLOBAL_STATE.cast_spell = match.group(2).replace("_", " ")
-        GLOBAL_STATE.cast_duration = updated_duration
+    # batclient message has duration 0 if duration is unknown, in that
+    # case reduce duration by one or let it stay None
+    if duration > 0:
+        updated_duration = duration
+    elif GLOBAL_STATE.cast_duration is not None:
+        updated_duration = GLOBAL_STATE.cast_duration - 1
+    else:
+        updated_duration = None
 
-        update_status_cast()
+    GLOBAL_STATE.cast_duration = updated_duration
+
+    update_status_cast()
 
 
 def clear_cast():
@@ -122,9 +137,6 @@ def clear_cast():
     GLOBAL_STATE.cast_duration = None
     GLOBAL_STATE.cast_target = None
     update_status_cast()
-
-
-CAST_CANCELLED_MATCH = "\\\\∴cast_cancelled"
 
 
 def cast_cancelled_cb(_s: str):
@@ -191,25 +203,31 @@ def on_login(_s: str):
     """
     This function is called on LOGIN hook, defined in tfrc
     """
-    tfeval("@whoami")
+    tfeval("@whoami;sc")
 
 
 def update_status_sc():
+    """
+    Update status line sc-slot with current state
+
+    Max width is defined in init_tf /status_add command:
+    - 5 characters for eqset name
+    """
     status = f"""\
-{stringify(GLOBAL_STATE.eqset, "EQ:", " ")}\
-H:{GLOBAL_STATE.hp}/{GLOBAL_STATE.hpmax} \
-S:{GLOBAL_STATE.sp}/{GLOBAL_STATE.spmax} \
-E:{GLOBAL_STATE.ep}/{GLOBAL_STATE.epmax} \
+EQ:{stringify(GLOBAL_STATE.eqset):5} \
+H:{GLOBAL_STATE.hp:4}/{GLOBAL_STATE.hpmax:4} \
+S:{GLOBAL_STATE.sp:4}/{GLOBAL_STATE.spmax:4} \
+E:{GLOBAL_STATE.ep:3}/{GLOBAL_STATE.epmax:3} \
 | """
-    tfeval(f"/set global_status_sc={status}")
+    tfeval(f"/set status_row_sc={status}")
 
 
 def update_status_cast():
     status = f"""\
-{stringify(GLOBAL_STATE.cast_duration, "", " ")}\
+{stringify(GLOBAL_STATE.cast_duration):>2} \
 {stringify(GLOBAL_STATE.cast_spell, "", " ")}\
 {stringify(GLOBAL_STATE.cast_target, "at ")}"""
-    tfeval(f"/set global_status_cast={status}")
+    tfeval(f"/set status_row_cast={status}")
 
 
 def print_state(_s: str):
@@ -217,19 +235,18 @@ def print_state(_s: str):
 
 
 def init_tf():
+    trigger_bcproxy("hpstatus", hpstatus_cb)
+    trigger_bcproxy("cast", cast_cb)
+    trigger_bcproxy("use", use_cb)
+    trigger_bcproxy("cast_cancelled", cast_cancelled_cb, simple=True)
     trigger(WHOAMI_RE, whoami_cb)
-    trigger(HPSTATUS_GLOB, hpstatus_cb, TriggerPriority.BCPROXY)
-    trigger(CAST_RE, cast_cb, TriggerPriority.BCPROXY)
-    trigger(CAST_CANCELLED_MATCH, cast_cancelled_cb, TriggerPriority.BCPROXY)
     trigger(CAST_INFO_EMPTY_MATCH, cast_info_empty_cb)
     trigger(CAST_STARTED_MATCH, cast_started_cb)
     trigger(USE_STARTED_MATCH, use_started_cb)
     trigger(CAST_INFO_RE, cast_info_cb)
     trigger(SC_RE, sc_cb)
 
-    tfeval(
-        "/status_add -c global_status_sc:42 global_status_cast::Cbgrgb110 :1 @more:8:Br"
-    )
+    tfeval("/status_add -c status_row_sc:45 status_row_cast::BCrgb330 :1 @more:8:Br")
 
 
 init_tf()

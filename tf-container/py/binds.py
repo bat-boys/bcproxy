@@ -1,4 +1,4 @@
-from py.tfutils import tfeval, tfprint
+from py.tfutils import tfeval
 
 
 WALKING: dict[str, str] = {
