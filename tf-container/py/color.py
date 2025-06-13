@@ -58,6 +58,25 @@ def color_from_string(s: str | None) -> Color | None:
     return Color(bytes[0], bytes[1], bytes[2])
 
 
+def green_red_gradient(
+    n: int, n_max: int, all_red_abs: int, all_red_ratio: float
+) -> Color:
+    all_red = max(all_red_abs, int(n_max * all_red_ratio + 0.5))
+
+    if n < all_red:
+        return RED
+    if n >= n_max:
+        return GREEN
+
+    # http://stackoverflow.com/a/340245
+    # green is 0 and red 1, so invert the ratio to get maximum to be green
+    # also, bottom 10% is already handled, so reduce 10% of maximum from both
+    n_ratio = 1 - ((n - all_red) / (n_max - all_red))
+    r = int(255 * n_ratio + 0.5)
+    g = int(255 * (1 - n_ratio) + 0.5)
+    return Color(r, g, 0)
+
+
 def test():
     print("".join(colorize(s, color_from_string(s)) for s in "Hello, World!"))
 

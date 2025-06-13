@@ -1,4 +1,4 @@
-from py.tfutils import tfeval
+from py.tfutils import tfeval, tfprint
 
 
 WALKING: dict[str, str] = {
@@ -45,19 +45,42 @@ CASTING: dict[str, str] = {
     "^[z": "@cast stop",
 }
 
-PARTY_TARGETTING: dict[str, str] = {
-    "^[7": "@nw",
+TARGETTING: dict[str, str] = {
+    # normal party places
+    "^[7": "/python_call py.party.target 1 1",
+    "^[8": "/python_call py.party.target 1 2",
+    "^[9": "/python_call py.party.target 1 3",
+    "^[u": "/python_call py.party.target 2 1",
+    "^[i": "/python_call py.party.target 2 2",
+    "^[o": "/python_call py.party.target 2 3",
+    "^[j": "/python_call py.party.target 3 1",
+    "^[k": "/python_call py.party.target 3 2",
+    "^[l": "/python_call py.party.target 3 3",
+    # unknown party places
+    "^[n": "/python_call py.party.target 0 0",
+    "^[m": "/python_call py.party.target 0 1",
+    "^[,": "/python_call py.party.target 0 2",
+    "^[.": "/python_call py.party.target 0 3",
+    "^[6": "/python_call py.party.target 1 0",
+    "^[y": "/python_call py.party.target 2 0",
+    "^[h": "/python_call py.party.target 3 0",
 }
 
 
-def bind(keys: dict[str, str]):
+def bind(keys: dict[str, str]) -> None:
     for key in keys:
         tfeval(f"/bind {key} = {keys[key]}")
 
 
-def walking(_s: str | None = None):
+def walking(_s: str | None = None) -> None:
     bind(WALKING)
+    tfprint("Walking binds")
 
 
-def casting(_s: str | None = None):
+def casting(_s: str | None = None) -> None:
     bind(CASTING)
+
+
+def targetting(_s: str | None = None) -> None:
+    bind(TARGETTING)
+    tfprint("Targetting binds")

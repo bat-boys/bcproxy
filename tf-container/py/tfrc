@@ -19,6 +19,7 @@
 /python_load py.global_state
 /python_load py.chat
 /python_load py.binds
+/python_load py.party
 
 ;; load per-character commands from tfrc-<world name>
 /hook LOGIN = /load py/tfrc-%{1}%;/python_call py.global_state.on_login

@@ -1,8 +1,11 @@
+from dataclasses import dataclass
 import pickle
 from asyncio import StreamReader, StreamWriter, open_unix_connection, start_unix_server
 from contextlib import asynccontextmanager
 from enum import StrEnum
 from typing import Any, AsyncIterator, Callable, Coroutine, NamedTuple, TypeVar
+
+from py.color import Color
 
 
 class Socket(StrEnum):
@@ -27,8 +30,30 @@ class ChannelMessage(NamedTuple):
     message: str
 
 
-class PartyUpdate(NamedTuple):
-    pass
+class Place(NamedTuple):
+    x: int
+    y: int
+
+
+class Member(NamedTuple):
+    name: str
+    name_color: Color | None
+    hp: int
+    maxhp: int
+    sp: int
+    maxsp: int
+    ep: int
+    maxep: int
+    status: str
+    status_color: Color | None
+    place: Place | None
+
+
+class PartyMessage(NamedTuple):
+    members: set[Member]
+    places: dict[Place, Member | None]
+    previous_places: dict[str, Place]
+    target: str | None
 
 
 T = TypeVar("T")
@@ -57,7 +82,11 @@ async def socket_server(
 async def socket_client(
     socket: Socket,
 ) -> AsyncIterator[tuple[StreamReader, StreamWriter]]:
-    reader, writer = await open_unix_connection(socket)
+    try:
+        reader, writer = await open_unix_connection(socket)
+    except ConnectionRefusedError:
+        return
+
     try:
         yield reader, writer
     finally:
