@@ -51,13 +51,21 @@ General priorities:
 - 3: gags
 - 2: monsters
 
+## Skills and spells
+
+Scrape skills and spells from [BatMUD website](https://www.bat.org/help/sksp) 
+to json file. Used in spell vocals and binds.
+
+``` sh
+uv run python -m utils.spell_scraper
+```
+
 
 ## Python-deviympäristö
 
 [Install UV](https://docs.astral.sh/uv/#getting-started)
 
 ``` sh
-cd scripts
 uv run pre-commit install
 ```
 
