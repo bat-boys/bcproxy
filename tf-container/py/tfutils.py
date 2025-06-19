@@ -55,7 +55,7 @@ def trigger(
     gag_flags = "-ag" if gag else ""
     callback_fn_str = f"{callback.__module__}.{callback.__name__}"
     cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
-    tfprint(cmd)
+    # tfprint(cmd)
     tfeval(cmd)
 
 
@@ -73,7 +73,6 @@ def substitute_enumerable(strs: list[str]) -> None:
     tf_match_str = "\\%{*}"
     for n, s in enumerate(strs):
         cmd = f"/def -i -p4 -msimple -t`{s}` enumerate_{hash}_{n} = /substitute {tf_match_str} ({n + 1}/{N})"
-        tfprint(cmd)
         tfeval(cmd)
 
 
@@ -84,7 +83,6 @@ def gag(strs: str | list[str]) -> None:
 
     for n, s in enumerate(strs):
         cmd = f"/def -i -p3 -msimple -ag -t`{s}` gag_{hash}_{n}"
-        tfprint(cmd)
         tfeval(cmd)
 
 
@@ -125,28 +123,6 @@ def stringify(s: str | int | None, prefix: str = "", suffix: str = "") -> str:
     if s is None:
         return ""
     return f"{prefix}{s}{suffix}"
-
-
-def initialize():
-    # command with_triggers
-    # ask trigger_$1_start about .;$-2;ask trigger_$1_end about .
-
-    tfeval(
-        """/def -agGL -p1 -mregexp -t`\
-^Astounding!  You can see things no one else can see, such as trigger_(.+)_starts.$\
-` trigger_enabler = /edit -c100 -agGL \\%P1"""
-    )
-
-    tfeval(
-        """/def -F -agGL -p1 -mregexp -t`\
-^Astounding!  You can see things no one else can see, such as trigger_(.+)_ends.$\
-` trigger_disabler = /edit -c0 -an \\%P1"""
-    )
-
-    # "/def eqinfo = @with_triggers eqinfo_eqnumber eqnumber unworn \%*",
-    # "/def -F -agGL -p10 -c0 -mregexp -t`"
-    # + ".+[0-9]: (.+)\$"
-    # + "` eqinfo_eqnumber = /python_call eqshoppe.eqinfo \%P1",
 
 
 def maybe_int(s: str) -> int | None:
