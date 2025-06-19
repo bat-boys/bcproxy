@@ -20,6 +20,7 @@
 /python_load py.chat
 /python_load py.binds
 /python_load py.party
+/python_load py.prefix_trigger
 /python_load py.typo_messages
 
 ;; load per-character commands from tfrc-<world name>

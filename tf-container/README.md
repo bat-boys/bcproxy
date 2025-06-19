@@ -44,12 +44,16 @@ ansi woundedaggrmons #D05050
 
 General priorities:
 
-- 22: bcproxy messages
-- 20: gag bcproxy messages, no fall-through
-- 10: default
-- 4: enumerable strings
-- 3: gags
-- 2: monsters
+| prio | explanation                                       |
+|-----:|---------------------------------------------------|
+|   22 | bcproxy messages                                  |
+|   20 | gag the rest of bcproxy messages, no fall-through |
+|   19 | prefix trigger, no fall-through                   |
+|   10 | default                                           |
+|    4 | enumerable strings                                |
+|    3 | gags                                              |
+|    2 | monsters                                          |
+
 
 ## Skills and spells
 
