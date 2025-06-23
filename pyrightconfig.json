@@ -1,0 +1,5 @@
+{
+  "venvPath": "tf-container",
+  "venv": ".venv",
+  "include": ["tf-container"]
+}

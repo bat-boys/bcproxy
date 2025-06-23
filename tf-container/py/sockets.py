@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import pickle
 from asyncio import StreamReader, StreamWriter, open_unix_connection, start_unix_server
 from contextlib import asynccontextmanager

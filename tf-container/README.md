@@ -50,10 +50,10 @@ General priorities:
 |   20 | gag the rest of bcproxy messages, no fall-through |
 |   19 | prefix trigger, no fall-through                   |
 |   10 | default                                           |
+|    5 | spell vocals                                      |
 |    4 | enumerable strings                                |
 |    3 | gags                                              |
 |    2 | monsters                                          |
-
 
 ## Skills and spells
 

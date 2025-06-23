@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install -y bmake make git gcc curl groff-base libtls-dev python3-dev libpcre3-dev libicu-dev pkg-config libncurses-dev tmux
+RUN apt-get update && apt-get install -y bmake make git gcc curl groff-base libtls-dev python3-dev python3-pip libpcre3-dev libicu-dev pkg-config libncurses-dev tmux
 
 # install bcproxy
 
@@ -29,6 +29,9 @@ RUN make install
 RUN mkdir /run/bcproxy-tf
 
 WORKDIR /usr/local/share/tf-lib
+
+# install script dependencies
+RUN pip3 install --break-system-packages pydantic
 
 # overwrite dummy tf.py with a python 3 compatible version
 COPY py/tf.py tf.py

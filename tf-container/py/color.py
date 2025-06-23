@@ -16,6 +16,27 @@ RED = Color(0xFF, 0, 0)
 GREEN = Color(0, 0xFF, 0)
 YELLOW = Color(0xFF, 0xFF, 0)
 WHITE = Color(0xFF, 0xFF, 0xFF)
+ANSI_COLOR_RESET = "\033[0m"
+TF_COLOR_RESET = "@{n}"
+
+# values 0x00, 0x33, 0x66, 0x99, 0xCC, 0xFF
+
+ANSI_BLACK = Color(0x00, 0x00, 0x00)
+ANSI_RED = Color(0x99, 0x00, 0x00)
+ANSI_GREEN = Color(0x00, 0x99, 0x00)
+ANSI_YELLOW = Color(0x99, 0x99, 0x00)
+ANSI_BLUE = Color(0x00, 0x00, 0x99)
+ANSI_MAGENTA = Color(0x99, 0x00, 0x99)
+ANSI_CYAN = Color(0x00, 0x99, 0x99)
+ANSI_WHITE = Color(0x99, 0x99, 0x99)
+ANSI_BRIGHT_BLACK = Color(0x99, 0x99, 0x99)
+ANSI_BRIGHT_RED = Color(0xFF, 0x66, 0x66)
+ANSI_BRIGHT_GREEN = Color(0x66, 0xFF, 0x66)
+ANSI_BRIGHT_YELLOW = Color(0xFF, 0xFF, 0x66)
+ANSI_BRIGHT_BLUE = Color(0x66, 0x66, 0xFF)
+ANSI_BRIGHT_MAGENTA = Color(0xFF, 0x66, 0xFF)
+ANSI_BRIGHT_CYAN = Color(0x66, 0xFF, 0xFF)
+ANSI_BRIGHT_WHITE = Color(0xFF, 0xFF, 0xFF)
 
 
 def colorize_maybe(
@@ -40,8 +61,37 @@ def colorize(s: str, color: Color | None, bg_color: Color | None = None) -> str:
     colors = joined([color_str, bg_color_str])
 
     begin = f"\033[{colors}m"
-    reset = "\033[0m"
-    return f"{begin}{s}{reset}"
+    return f"{begin}{s}{ANSI_COLOR_RESET}"
+
+
+def tf_color(color: Color) -> str:
+    """
+    Round RGB values to nearest 0..5 and convert to TF color format.
+    """
+
+    def round_to_tf_value(value: int) -> int:
+        return round(value / 255 * 5)
+
+    r = round_to_tf_value(color.r)
+    g = round_to_tf_value(color.g)
+    b = round_to_tf_value(color.b)
+
+    return f"rgb{r}{g}{b}"
+
+
+def colorize_tf(s: str, color: Color | None, bg_color: Color | None = None) -> str:
+    """
+    Colorize a string with the given color and background color for printing
+    inside TF
+    """
+    if color is None and bg_color is None:
+        return s
+
+    color_str = f"@{{C{tf_color(color)}}}" if color is not None else None
+    bg_color_str = f"@{{Cbg{tf_color(bg_color)}}}" if bg_color is not None else None
+    colors = "".join((x for x in (color_str, bg_color_str) if x is not None))
+
+    return f"{colors}{s}{TF_COLOR_RESET}"
 
 
 def color_from_string(s: str | None) -> Color | None:
