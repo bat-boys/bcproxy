@@ -23,6 +23,7 @@
 /python_load py.prefix_trigger
 /python_load py.typo_messages
 /python_load py.spells
+/python_load py.next_command
 
 ;; load per-character commands from tfrc-<world name>
 /hook LOGIN = /load py/tfrc-%{1}%;/python_call py.global_state.on_login
