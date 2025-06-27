@@ -10,6 +10,7 @@ from py.color import Color
 class Socket(StrEnum):
     CHAT = "/run/bcproxy-tf/chat.sock"
     PARTY = "/run/bcproxy-tf/party.sock"
+    CASTING = "/run/bcproxy-tf/casting.sock"
 
 
 # Message types have to be defined in this file so that message type checking
@@ -30,8 +31,9 @@ class ChannelMessage(NamedTuple):
 
 
 class Place(NamedTuple):
-    x: int
+    # batmud has y coordinate first in all party place commands
     y: int
+    x: int
 
 
 class Member(NamedTuple):
@@ -71,6 +73,7 @@ async def socket_server(
     server = await start_unix_server(callback, socket)
 
     addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
+    print("\033c", end="")
     print(f"Serving on {addrs}")
 
     async with server:

@@ -1,7 +1,8 @@
 import re
-from typing import NamedTuple, Self
+from typing import NamedTuple, Pattern, Self
 from datetime import datetime
 from py.tfutils import (
+    gag,
     parse_level,
     stringify,
     tfprint,
@@ -9,8 +10,9 @@ from py.tfutils import (
     trigger,
     trigger_bcproxy,
 )
-
 from dataclasses import dataclass
+from py.prefix_trigger import register_prefix_trigger
+from py.spells import get_spell_by_name
 
 
 @dataclass
@@ -29,6 +31,7 @@ class State:
     cast_duration: int | None
     cast_target: str | None
     eqset: str | None
+    target: str | None
 
 
 GLOBAL_STATE = State(
@@ -46,6 +49,7 @@ GLOBAL_STATE = State(
     cast_duration=None,
     cast_target=None,
     eqset=None,
+    target=None,
 )
 
 # /trigger You are Dreoca, a level III valar.
@@ -62,6 +66,13 @@ def whoami_cb(s: str):
         GLOBAL_STATE.char_name = match.group(1)
         GLOBAL_STATE.char_level = parse_level(match.group(2))
         GLOBAL_STATE.char_race = match.group(3)
+
+
+def get_char_name() -> str | None:
+    """
+    Get character name from global state.
+    """
+    return GLOBAL_STATE.char_name
 
 
 # hpstatus 3 10 1 10 0 10
@@ -143,6 +154,13 @@ def cast_cancelled_cb(_s: str):
     clear_cast()
 
 
+CAST_INTERRUPTED_MATCH = "You interrupt the chant in order to start a new chant."
+
+
+def cast_interrupted_cb(_s: str):
+    clear_cast()
+
+
 CAST_INFO_EMPTY_MATCH = "You are not doing anything at the moment."
 
 
@@ -151,26 +169,29 @@ def cast_info_empty_cb(_s: str):
 
 
 CAST_STARTED_MATCH = "You start chanting."
-
-
-def cast_started_cb(_s: str):
-    tfeval("@cast info")
-
-
 USE_STARTED_MATCH = "You start concentrating on the skill."
 
 
+def cast_started_cb(_s: str):
+    tfeval("@with_prefix cast_info cast info")
+
+
+# this has to be separate from cast_started_cb
 def use_started_cb(_s: str):
-    tfeval("@cast info")
+    tfeval("@with_prefix cast_info cast info")
 
 
 CAST_INFO_RE = re.compile(r"^You are (casting|using) '(.+?)'( at '(.+)')?.$")
 
 
-def cast_info_cb(s: str):
+def cast_info_cb(s: list[str]):
     global GLOBAL_STATE
-    if match := CAST_INFO_RE.match(s):
-        GLOBAL_STATE.cast_spell = match.group(2)
+    if match := CAST_INFO_RE.match("".join(s)):
+        spell_name = match.group(2)
+        GLOBAL_STATE.cast_spell = spell_name
+        spell = get_spell_by_name(spell_name)
+        if spell and GLOBAL_STATE.cast_duration is None:
+            GLOBAL_STATE.cast_duration = spell.casting_time
         if target := match.group(4):
             GLOBAL_STATE.cast_target = target
         else:
@@ -230,8 +251,44 @@ def update_status_cast():
     tfeval(f"/set status_row_cast={status}")
 
 
+def set_target(target: str | None):
+    global GLOBAL_STATE
+    GLOBAL_STATE.target = target.lower() if target else None
+    tfprint(f"Target: {GLOBAL_STATE.target}")
+
+
+def get_target() -> str | None:
+    return GLOBAL_STATE.target
+
+
 def print_state(_s: str):
     tfprint(f"state: {GLOBAL_STATE}")
+
+
+TARGET_MATCH = "You are now targetting *"
+TARGET_HEAL_MATCH = "You are now target-healing *"
+
+
+def target_cb(name: str):
+    # remove last dot if present
+    if name.endswith("."):
+        name = name[:-1]
+    set_target(name)
+
+
+def target_heal_cb(name: str):
+    # remove last dot if present
+    if name.endswith("."):
+        name = name[:-1]
+    set_target(name)
+
+
+CASTING_GAGS: list[str | Pattern[str]] = [
+    "You surreptitiously conceal your spell casting.",
+    "You skillfully cast the spell with haste.",
+    "You skillfully cast the spell with greater haste.",
+    "You interrupt the spell.",  # overlapping message from bcproxy
+]
 
 
 def init_tf():
@@ -240,13 +297,19 @@ def init_tf():
     trigger_bcproxy("use", use_cb)
     trigger_bcproxy("cast_cancelled", cast_cancelled_cb, simple=True)
     trigger(WHOAMI_RE, whoami_cb)
-    trigger(CAST_INFO_EMPTY_MATCH, cast_info_empty_cb)
-    trigger(CAST_STARTED_MATCH, cast_started_cb)
-    trigger(USE_STARTED_MATCH, use_started_cb)
-    trigger(CAST_INFO_RE, cast_info_cb)
+    trigger(CAST_INFO_EMPTY_MATCH, cast_info_empty_cb, gag=True)
+    trigger(CAST_STARTED_MATCH, cast_started_cb, gag=True)
+    trigger(USE_STARTED_MATCH, use_started_cb, gag=True)
+    trigger(CAST_INTERRUPTED_MATCH, cast_interrupted_cb, gag=True)
+    trigger(TARGET_MATCH, target_cb, callback_param="\\%-4")
+    trigger(TARGET_HEAL_MATCH, target_heal_cb, callback_param="\\%-4")
+    gag(CASTING_GAGS)
+
     trigger(SC_RE, sc_cb)
+    register_prefix_trigger("cast_info", cast_info_cb)
 
     tfeval("/status_add -c status_row_sc:45 status_row_cast::BCrgb330 :1 @more:8:Br")
+    tfprint("Loaded global_state")
 
 
 init_tf()

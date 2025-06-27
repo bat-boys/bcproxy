@@ -157,6 +157,10 @@ SPELLS: dict[str, Spell] = {}
 SPELL_BY_VOCALS: dict[str, Spell] = {}
 
 
+def get_spell_by_name(name: str) -> Spell | None:
+    return SPELLS.get(name.lower())
+
+
 def load_spells() -> None:
     global SPELLS
 
@@ -186,12 +190,16 @@ def set_spell_name_by_vocals(vocals: str) -> None:
         tfeval("/set spell_name=0")
 
 
-def set_spell_name_by_spell(spell: Spell) -> None:
-    color, bg_color = (
+def get_spell_color(spell: Spell) -> tuple[Color | None, Color | None]:
+    return (
         SPELL_NAME_COLORS.get(spell.name.lower())
         or DAMAGE_TYPE_COLORS.get(spell.damage_type)
         or CAST_TYPE_COLORS.get(spell.cast_type, (None, None))
     )
+
+
+def set_spell_name_by_spell(spell: Spell) -> None:
+    color, bg_color = get_spell_color(spell)
     colorized = colorize_tf(f"({spell.name})", color, bg_color)
     tfeval(f"/set spell_name={colorized}")
 

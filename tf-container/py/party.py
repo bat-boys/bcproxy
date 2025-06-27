@@ -14,6 +14,7 @@ from py.sockets import (
 )
 from py.tfutils import maybe_int, tfprint, trigger, trigger_bcproxy
 from py.color import RED, WHITE, YELLOW, Color, colorize, green_red_gradient
+from py.global_state import get_char_name, set_target
 
 
 #  Dornier 1429/1587 -158      Tuli 1473/1549  -76    Durtle 1861/1861
@@ -56,6 +57,11 @@ EMPTY_PLACES: dict[Place, Member | None] = {
 }
 
 STATE = PartyMessage(set(), copy(EMPTY_PLACES), {}, None)
+
+
+def clear_state() -> None:
+    global STATE
+    STATE = PartyMessage(set(), copy(EMPTY_PLACES), {}, None)
 
 
 class BCPartyStatusUpdate(NamedTuple):
@@ -166,7 +172,7 @@ class BCPartyStatusUpdate(NamedTuple):
             and self.place_y is not None
             and 1 <= self.place_y <= 3
         ):
-            return Place(self.place_x, self.place_y)
+            return Place(self.place_y, self.place_x)
         else:
             return None
 
@@ -255,6 +261,29 @@ def party_cb(s: str) -> None:
     run(sender(msg))
 
 
+def partyleave_cb(s: str) -> None:
+    me = get_char_name()
+
+    if me and s.lower() == me.lower():
+        clear_state()
+    else:
+        for m in STATE.members:
+            if m.name == s.lower():
+                STATE.members.remove(m)
+                break
+
+    set_places()
+
+    msg = PartyMessage(
+        members=STATE.members,
+        places=STATE.places,
+        previous_places=STATE.previous_places,
+        target=STATE.target,
+    )
+
+    run(sender(msg))
+
+
 async def sender(msg: PartyMessage) -> None:
     async with socket_client(Socket.PARTY) as (_, writer):
         await send_object(writer, msg)
@@ -329,10 +358,10 @@ def party_window_output(state: PartyMessage) -> str:
     s = ""
     # 0 last as we'll want the unknown places to bottom
     for y in (1, 2, 3, 0):
-        col0 = get_place_lines(state, Place(0, y))
-        col1 = get_place_lines(state, Place(1, y))
-        col2 = get_place_lines(state, Place(2, y))
-        col3 = get_place_lines(state, Place(3, y))
+        col0 = get_place_lines(state, Place(y, 0))
+        col1 = get_place_lines(state, Place(y, 1))
+        col2 = get_place_lines(state, Place(y, 2))
+        col3 = get_place_lines(state, Place(y, 3))
 
         s += f"{col0[0]} {col1[0]} {col2[0]} {col3[0]}\n"
         s += f"{col0[1]} {col1[1]} {col2[1]} {col3[1]}\n"
@@ -353,14 +382,15 @@ def target_heal_cb(name: str) -> None:
 def target_by_name(name: str) -> None:
     global STATE
 
-    for m in STATE.members:
-        if m.name.lower() == name.lower():
-            STATE = STATE._replace(target=m.name)
+    for member in STATE.members:
+        if member.name.lower() == name.lower():
+            STATE = STATE._replace(target=member.name)
+            set_target(member.name)
             run(sender(STATE))
             return
 
 
-def target_by_place(x: int, y: int) -> None:
+def target_by_place(y: int, x: int) -> None:
     global STATE
 
     if x == -1 and y == -1:
@@ -370,9 +400,10 @@ def target_by_place(x: int, y: int) -> None:
     if not (0 <= x <= 3 and 0 <= y <= 3):
         return
 
-    member = STATE.places.get(Place(x, y), None)
+    member = STATE.places.get(Place(y, x), None)
     if member:
         STATE = STATE._replace(target=member.name)
+        set_target(member.name)
         run(sender(STATE))
 
 
@@ -385,15 +416,16 @@ def target(name_or_coords: str) -> None:
     elif len(splitted) == 2:
         # two parts, try to parse as coordinates
         try:
-            x = int(splitted[0])
-            y = int(splitted[1])
-            target_by_place(x, y)
+            y = int(splitted[0])
+            x = int(splitted[1])
+            target_by_place(y, x)
         except ValueError:
             return
 
 
 def init_tf() -> None:
     trigger_bcproxy("party", party_cb)
+    trigger_bcproxy("partyleave", partyleave_cb)
     trigger("You are now target-healing *", target_heal_cb, callback_param="\\%-4")
 
 

@@ -15,12 +15,14 @@
 /def WORLDFILE = worlds/worlds.tf
 /loadworld
 
+;; order of these imports matter
 /load py/gag-bcproxy-tags.tf
+/python_load py.prefix_trigger
 /python_load py.global_state
 /python_load py.chat
-/python_load py.binds
 /python_load py.party
-/python_load py.prefix_trigger
+/python_load py.casting
+/python_load py.binds
 /python_load py.typo_messages
 /python_load py.spells
 /python_load py.next_command

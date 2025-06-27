@@ -12,7 +12,13 @@ class TriggerMatching(StrEnum):
 
 
 class TriggerPriority(IntEnum):
-    BCPROXY = 22  # from gag-bcproxy-tags.tf
+    BCPROXY = 22
+    BCPROXY_GAG = 20
+    DEFAULT = 10
+    SPELL_VOCAL = 5
+    ENUMERATION = 4
+    GAG = 3
+    MONSTER = 2
 
 
 def tfprint(s: str):
@@ -37,12 +43,17 @@ def trigger_bcproxy(
     trigger(pattern, callback, TriggerPriority.BCPROXY, callback_param="\\%-1")
 
 
+def get_callback_fn_str(callback: Callable[[str], None]) -> str:
+    return f"{callback.__module__}.{callback.__name__}"
+
+
 def trigger(
     pattern: str | Pattern[str],
     callback: Callable[[str], None],
-    priority: int = 10,
+    priority: int = TriggerPriority.DEFAULT,
     gag: bool = False,
     callback_param: str = "\\%*",
+    disabled: bool = False,
 ):
     if isinstance(pattern, Pattern):
         matching = TriggerMatching.REGEXP
@@ -53,10 +64,21 @@ def trigger(
         matching = TriggerMatching.SIMPLE
 
     gag_flags = "-ag" if gag else ""
-    callback_fn_str = f"{callback.__module__}.{callback.__name__}"
-    cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
+    disable_flags = "-c0" if disabled else ""
+    callback_fn_str = get_callback_fn_str(callback)
+    cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} {disable_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
     # tfprint(cmd)
     tfeval(cmd)
+
+
+def enable_trigger(callback: Callable[[str], None]) -> None:
+    callback_fn_str = get_callback_fn_str(callback)
+    tfeval(f"/edit -c100 {callback_fn_str}")
+
+
+def disable_trigger(callback: Callable[[str], None]) -> None:
+    callback_fn_str = get_callback_fn_str(callback)
+    tfeval(f"/edit -c0 {callback_fn_str}")
 
 
 def short_hash(s: str | list[str]) -> str:
@@ -71,18 +93,28 @@ def substitute_enumerable(strs: list[str]) -> None:
     N = len(strs)
     hash = short_hash(strs)
     tf_match_str = "\\%{*}"
+    priority = TriggerPriority.ENUMERATION
     for n, s in enumerate(strs):
-        cmd = f"/def -i -p4 -msimple -t`{s}` enumerate_{hash}_{n} = /substitute {tf_match_str} ({n + 1}/{N})"
+        cmd = f"/def -i -p{priority} -msimple -t`{s}` enumerate_{hash}_{n} = /substitute {tf_match_str} ({n + 1}/{N})"
         tfeval(cmd)
 
 
-def gag(strs: str | list[str]) -> None:
-    if not isinstance(strs, list):
-        strs = [strs]
-    hash = short_hash(strs)
+def gag(patterns: str | Pattern[str] | list[str | Pattern[str]]) -> None:
+    if not isinstance(patterns, list):
+        patterns = [patterns]
+    hash = short_hash(str(patterns))
+    priority = TriggerPriority.GAG
 
-    for n, s in enumerate(strs):
-        cmd = f"/def -i -p3 -msimple -ag -t`{s}` gag_{hash}_{n}"
+    for n, pattern in enumerate(patterns):
+        if isinstance(pattern, Pattern):
+            matching = TriggerMatching.REGEXP
+            pattern = pattern.pattern.replace("\\", "\\\\").replace("$", "\\$")
+        elif "*" in pattern:
+            matching = TriggerMatching.GLOB
+        else:
+            matching = TriggerMatching.SIMPLE
+
+        cmd = f"/def -i -p{priority} -m{matching} -ag -t`{pattern}` gag_{hash}_{n}"
         tfeval(cmd)
 
 
@@ -130,3 +162,8 @@ def maybe_int(s: str) -> int | None:
         return int(s)
     except ValueError:
         return None
+
+
+def clear_and_print(s: str) -> None:
+    print("\033c", end="")  # clear screen
+    print(s)
