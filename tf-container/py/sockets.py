@@ -57,6 +57,12 @@ class PartyMessage(NamedTuple):
     target: str | None
 
 
+class CastingTabMessage(NamedTuple):
+    selected_tab: int
+    tab_titles: dict[int, str]
+    selected_tab_items: dict[str, str]
+
+
 T = TypeVar("T")
 
 
