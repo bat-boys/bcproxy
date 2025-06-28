@@ -14,8 +14,43 @@ from py.sockets import (
     socket_server,
 )
 
-TELL_RE = re.compile(r"^chan_tell: (.+?) tells? (.+?) '(.+)'$")
-CHANNEL_RE = re.compile(r"^chan_([a-z+-]+): (.+?) .[a-z+-]+?.: (.+)$")
+"""
+chat.py
+
+This module is used for chat-window.
+
+Tells and specified channels are printed to a separate window with modified
+colors and formatting.
+
+Tells are sent always, channels must be added separately with:
+
+    /python_call py.chat.add_channel party smoke+
+
+Last messages from channels can also be sent to the chat window with the following
+commands:
+
+    command last_tell prefix "chan_tell: " last tell
+    command last_smoke prefix "chan_smoke+: " last smoke+
+
+Say-channel and special cases in tell-channel (accepting raises etc.) don't
+work correctly.
+"""
+
+
+TELL_RE = re.compile(r"^chan_tell: (?:\(\d\d:\d\d\) )?(.+?) tells? (.+?) '(.+)'$")
+CHANNEL_RE = re.compile(
+    r"^chan_([a-z+-]+): (?:\[\d\d:\d\d\]:)?(.+?) .[a-z+-]+?.: (.+)$"
+)
+
+# channels which are printed to separate window
+STATE: set[str] = set()
+
+
+def add_channel(s: str) -> None:
+    global STATE
+    channels = s.split(" ")
+    for channel in channels:
+        STATE.add(channel)
 
 
 def parse_receivers(receivers: str) -> list[str]:
@@ -44,6 +79,10 @@ def channel_cb(s: str):
         channel = match.group(1)
         msg_sender = match.group(2)
         message = match.group(3)
+
+        if channel not in STATE:
+            return
+
         if msg_sender == GLOBAL_STATE.char_name:
             msg = ChannelMessage("you", channel, message)
         else:
@@ -90,6 +129,10 @@ def receiver(msg: TellMessage | ChannelMessage):
         server_print_tell(msg)
     elif isinstance(msg, ChannelMessage):
         server_print_channel(msg)
+
+
+def print_state(_s: str) -> None:
+    tfprint(f"Chat state: {STATE}")
 
 
 # the same script is run both inside tf and as a standalone chat-window server
