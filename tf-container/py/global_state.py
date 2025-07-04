@@ -13,6 +13,7 @@ from py.tfutils import (
 from dataclasses import dataclass
 from py.prefix_trigger import register_prefix_trigger
 from py.spells import get_spell_by_name
+from py.color import Color, colorize_tf
 
 
 @dataclass
@@ -151,6 +152,13 @@ def clear_cast():
 
 
 def cast_cancelled_cb(_s: str):
+    tfprint(
+        colorize_tf(
+            " -- skill/spell done -- ",
+            Color(0xFF, 0x33, 0x33),
+            Color(0x33, 0x33, 0x00),
+        )
+    )
     clear_cast()
 
 
@@ -158,6 +166,13 @@ CAST_INTERRUPTED_MATCH = "You interrupt the chant in order to start a new chant.
 
 
 def cast_interrupted_cb(_s: str):
+    tfprint(
+        colorize_tf(
+            " -- skill/spell interrupted -- ",
+            Color(0xFF, 0x33, 0x33),
+            Color(0x33, 0x33, 0x00),
+        )
+    )
     clear_cast()
 
 
@@ -173,11 +188,21 @@ USE_STARTED_MATCH = "You start concentrating on the skill."
 
 
 def cast_started_cb(_s: str):
+    tfprint(
+        colorize_tf(
+            " -- spell started -- ", Color(0x33, 0xFF, 0x33), Color(0x33, 0x33, 0x00)
+        )
+    )
     tfeval("@with_prefix cast_info cast info")
 
 
 # this has to be separate from cast_started_cb
 def use_started_cb(_s: str):
+    tfprint(
+        colorize_tf(
+            " -- skill started -- ", Color(0x33, 0xFF, 0x33), Color(0x33, 0x33, 0x00)
+        )
+    )
     tfeval("@with_prefix cast_info cast info")
 
 

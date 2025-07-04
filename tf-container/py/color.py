@@ -12,9 +12,9 @@ class Color(NamedTuple):
 # curl -s https://raw.githubusercontent.com/JohnMorales/dotfiles/master/colors/24-bit-color.sh | bash
 
 
-RED = Color(0xFF, 0, 0)
-GREEN = Color(0, 0xFF, 0)
-YELLOW = Color(0xFF, 0xFF, 0)
+RED = Color(0xFF, 0x00, 0x00)
+GREEN = Color(0x00, 0xFF, 0x00)
+YELLOW = Color(0xFF, 0xFF, 0x00)
 WHITE = Color(0xFF, 0xFF, 0xFF)
 ANSI_COLOR_RESET = "\033[0m"
 TF_COLOR_RESET = "@{n}"

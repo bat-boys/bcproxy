@@ -9,7 +9,7 @@ from py.sockets import (
     CastingTabMessage,
 )
 from py.color import WHITE, colorize
-from py.spells import Spell, get_spell_by_name
+from py.spells import Spell, get_spell_by_name, get_spell_color
 from py.tfutils import clear_and_print, tfeval, tfprint
 from py.global_state import get_target
 
@@ -18,6 +18,28 @@ casting.py
 
 This module handles displaying spells in a tabbed window as well as
 casting them.
+
+Reporting needs this mud command:
+
+    command zr quote 'grep -v "You are not doing" cast info' party report
+
+Spells are added like this in tfrc:
+
+    /python_call py.casting.add_casting_tab 1 heal
+    /python_call py.casting.add_casting_tab_spell 1 q 1 cure light wounds
+    /python_call py.casting.add_casting_tab_spell 1 w 1 cure critical wounds
+    /python_call py.casting.add_casting_tab_spell 1 a -1 minor party heal
+    /python_call py.casting.add_casting_tab_spell 1 s -1 major party heal
+
+    /python_call py.casting.add_casting_tab 4 blast
+    /python_call py.casting.add_casting_tab_spell 4 q 0 turn undead
+    /python_call py.casting.add_casting_tab_spell 4 a 0 wither flesh
+
+where first number (`1`, `2`) is the tab index, letters are the keys for casting
+(see binds.py) and second number is the spell targetting type:
+- -1 means spell does not accept a target (e.g. party heals)
+- 0 means spell can be cast with or without target (e.g. offensive spells)
+- 1 means spell requires a target (e.g. healing spells)
 """
 
 
@@ -99,11 +121,11 @@ def targeted_cast(s: str) -> None:
 
     match use_target:
         case UseTarget.NEVER:
-            tfeval(f"@cast {spell.name};quote 'cast info' party report")
+            tfeval(f"@cast {spell.name};zr")
         case UseTarget.EITHER:
-            tfeval(f"@cast {spell.name} at {target};quote 'cast info' party report")
+            tfeval(f"@cast {spell.name} at {target};zr")
         case UseTarget.ALWAYS:
-            tfeval(f"@cast {spell.name} at {target};quote 'cast info' party report")
+            tfeval(f"@cast {spell.name} at {target};zr")
 
 
 async def sender(msg: CastingTabMessage) -> None:
@@ -118,7 +140,13 @@ def receiver(msg: CastingTabMessage) -> None:
             for i, title in msg.tab_titles.items()
         )
     )
-    rows = [f"{key}: {spell}" for key, spell in msg.selected_tab_items.items()]
+    rows = []
+    for key, spell_name in msg.selected_tab_items.items():
+        spell = get_spell_by_name(spell_name)
+        fg, bg = get_spell_color(spell) if spell else (None, None)
+        spell_name_colorized = colorize(spell_name, fg, bg)
+        rows.append(f"{key} {spell_name_colorized}")
+
     clear_and_print("\n".join([header, *rows]))
 
 

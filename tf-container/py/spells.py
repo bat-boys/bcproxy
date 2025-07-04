@@ -5,7 +5,6 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, ValidationError
 
 from py.color import (
-    ANSI_BLACK,
     ANSI_BLUE,
     ANSI_BRIGHT_BLUE,
     ANSI_BRIGHT_CYAN,
@@ -93,15 +92,15 @@ CAST_TYPE_COLORS: dict[CastType | None, tuple[Color | None, Color | None]] = {
     CastType.CHAOS: (None, None),
     CastType.COLD: (ANSI_BRIGHT_CYAN, None),
     CastType.CONTROL: (None, None),
-    CastType.DEATH: (ANSI_BLACK, None),
-    CastType.DESTRUCTION: (ANSI_BLACK, None),
+    CastType.DEATH: (None, None),
+    CastType.DESTRUCTION: (None, None),
     CastType.DISPEL: (ANSI_BRIGHT_WHITE, None),
     CastType.ELECTRICITY: (ANSI_BRIGHT_BLUE, None),
-    CastType.EVIL: (ANSI_BLACK, None),
+    CastType.EVIL: (None, None),
     CastType.FIRE: (ANSI_RED, None),
-    CastType.HARM: (ANSI_BLACK, None),
+    CastType.HARM: (None, None),
     CastType.HEAL: (ANSI_GREEN, None),
-    CastType.HELP: (ANSI_BLACK, ANSI_WHITE),
+    CastType.HELP: (None, ANSI_WHITE),
     CastType.HOLY: (ANSI_BRIGHT_WHITE, None),
     CastType.INFORMATION: (None, None),
     CastType.MAGICAL: (ANSI_BRIGHT_YELLOW, None),
