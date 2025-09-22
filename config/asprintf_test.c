@@ -3,6 +3,7 @@
 int
 main(void)
 {
-	asprintf("%d", 1);
+	char *foo;
+	asprintf(&foo, "%d", 1);
 	return 0;
 }
