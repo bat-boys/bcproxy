@@ -32,7 +32,7 @@ postgres_add_room(void *dbp, struct room *room)
 		room->indoors ? "1" : "0",
 	};
 	PGresult *res = PQexecParams(db, "INSERT INTO room(id, shortdesc, "
-	    "longdesc, area, exits, indoors) SELECT $1, $2, $3, $4, $5, $6"
+	    "longdesc, area, exits, indoors) SELECT $1, $2, $3, $4, $5, $6 "
 	    "WHERE NOT EXISTS (SELECT 1 FROM room WHERE id=$1)",
 	    6, NULL, paramValues, NULL, NULL, 0);
 	if (PQresultStatus(res) != PGRES_COMMAND_OK) {
