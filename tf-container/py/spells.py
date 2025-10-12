@@ -15,7 +15,6 @@ from py.color import (
     ANSI_GREEN,
     ANSI_MAGENTA,
     ANSI_RED,
-    ANSI_WHITE,
     ANSI_YELLOW,
     Color,
     colorize_tf,
@@ -100,7 +99,7 @@ CAST_TYPE_COLORS: dict[CastType | None, tuple[Color | None, Color | None]] = {
     CastType.FIRE: (ANSI_RED, None),
     CastType.HARM: (None, None),
     CastType.HEAL: (ANSI_GREEN, None),
-    CastType.HELP: (None, ANSI_WHITE),
+    CastType.HELP: (ANSI_BRIGHT_WHITE, None),
     CastType.HOLY: (ANSI_BRIGHT_WHITE, None),
     CastType.INFORMATION: (None, None),
     CastType.MAGICAL: (ANSI_BRIGHT_YELLOW, None),
@@ -178,7 +177,7 @@ def load_spells() -> None:
     print(f"Loaded {len(SPELLS)} spells from {SKILLS_SPELLS_FILE}")
 
 
-SPELL_CAST_RE = re.compile(r" '(.+)'$")
+SPELL_CAST_RE = re.compile(r" '(.+)'\.?$")
 
 
 def set_spell_name_by_vocals(vocals: str) -> None:

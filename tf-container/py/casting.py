@@ -52,7 +52,7 @@ class UseTarget(Enum):
 @dataclass
 class CastingTab:
     title: str
-    spells: dict[str, tuple[Spell, UseTarget]]
+    spells: dict[str, tuple[Spell | str, UseTarget]]
 
 
 CASTING_TABS: dict[int, CastingTab] = {}
@@ -83,13 +83,13 @@ def tab(s: str) -> None:
             selected_tab=i,
             tab_titles={k: v.title for k, v in CASTING_TABS.items()},
             selected_tab_items={
-                k: v[0].name for k, v in CASTING_TABS[i].spells.items()
+                k: get_name(v[0]) for k, v in CASTING_TABS[i].spells.items()
             },
         )
         run(sender(STATE))
 
 
-def get_spell(s: str) -> tuple[Spell | None, UseTarget | None]:
+def get_spell(s: str) -> tuple[Spell | str | None, UseTarget | None]:
     tab = CASTING_TABS.get(STATE.selected_tab)
     if not tab:
         return (None, None)
@@ -98,19 +98,28 @@ def get_spell(s: str) -> tuple[Spell | None, UseTarget | None]:
     return spell
 
 
+def get_name(s: Spell | str) -> str:
+    if isinstance(s, str):
+        return s
+    else:
+        return s.name
+
+
 def cast(s: str) -> None:
     spell, use_target = get_spell(s)
     target = get_target()
     if not spell:
         return
 
+    name = get_name(spell)
+
     match use_target:
         case UseTarget.NEVER:
-            tfeval(f"@cast {spell.name}")
+            tfeval(f"@cast {name}")
         case UseTarget.EITHER:
-            tfeval(f"@cast {spell.name}")
+            tfeval(f"@cast {name}")
         case UseTarget.ALWAYS:
-            tfeval(f"@cast {spell.name} at {target}")
+            tfeval(f"@cast {name} at {target}")
 
 
 def targeted_cast(s: str) -> None:
@@ -119,13 +128,15 @@ def targeted_cast(s: str) -> None:
     if not spell:
         return
 
+    name = get_name(spell)
+
     match use_target:
         case UseTarget.NEVER:
-            tfeval(f"@cast {spell.name};zr")
+            tfeval(f"@cast {name};zr")
         case UseTarget.EITHER:
-            tfeval(f"@cast {spell.name} at {target};zr")
+            tfeval(f"@cast {name} at {target};zr")
         case UseTarget.ALWAYS:
-            tfeval(f"@cast {spell.name} at {target};zr")
+            tfeval(f"@cast {name} at {target};zr")
 
 
 async def sender(msg: CastingTabMessage) -> None:
@@ -148,6 +159,10 @@ def receiver(msg: CastingTabMessage) -> None:
         rows.append(f"{key} {spell_name_colorized}")
 
     clear_and_print("\n".join([header, *rows]))
+
+
+def print_state(s: str) -> None:
+    tfprint(str(STATE))
 
 
 def init_tf() -> None:
