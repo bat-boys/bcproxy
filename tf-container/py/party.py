@@ -205,6 +205,7 @@ def set_places() -> None:
     for member in STATE.members:
         if member.place is not None:
             new_places[member.place] = member
+            STATE.previous_places[member.name] = member.place
         else:
             no_place.add(member)
 
@@ -343,7 +344,7 @@ def get_place_lines(state: PartyMessage, place: Place) -> tuple[str, str]:
     hpdiff_str = member.hp - member.maxhp or " "
     hpdiff = colorize(f"{hpdiff_str: >5}", Color(0xEA, 0x22, 0x22))
     status = colorize(f"{member.status: >5}", member.status_color)
-    is_target = colorize("*    ", YELLOW) if state.target == member.name else "    "
+    is_target = colorize("*   ", YELLOW) if state.target == member.name else "    "
     ep_str = member.ep if member.ep is not None else "?"
     sp_str = member.sp if member.sp is not None else "?"
     maxsp_str = member.maxsp if member.maxsp is not None else "?"
@@ -381,6 +382,9 @@ def target_heal_cb(name: str) -> None:
 
 def target_by_name(name: str) -> None:
     global STATE
+
+    # if target is not a member, clear target
+    set_target(None)
 
     for member in STATE.members:
         if member.name.lower() == name.lower():
@@ -427,6 +431,7 @@ def init_tf() -> None:
     trigger_bcproxy("party", party_cb)
     trigger_bcproxy("partyleave", partyleave_cb)
     trigger("You are now target-healing *", target_heal_cb, callback_param="\\%-4")
+    tfprint("Loaded party")
 
 
 if __name__ == "__main__":
