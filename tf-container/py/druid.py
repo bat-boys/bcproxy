@@ -1,4 +1,4 @@
-from py.tfutils import gag, tfprint, substitute_enumerable
+from py.tfutils import gag, tfeval, tfprint, substitute_enumerable, trigger
 
 SENSECHARGE_STAFF: list[str] = [
     "shedding an eerie green light.",
@@ -21,9 +21,14 @@ GAG: list[str] = [
 ]
 
 
+def sensecharge_staff_cb(s: str) -> None:
+    tfeval("@sensecharge staff")
+
+
 def init_tf():
     substitute_enumerable(SENSECHARGE_STAFF)
     gag(GAG)
+    trigger("You sense power flowing into your Staff of Druids.", sensecharge_staff_cb)
     tfprint("Loaded druid")
 
 
