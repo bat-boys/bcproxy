@@ -49,7 +49,7 @@ def get_callback_fn_str(callback: Callable[[str], None]) -> str:
 
 def trigger(
     pattern: str | Pattern[str],
-    callback: Callable[[str], None],
+    callback: Callable[[str], None] | str,
     priority: int = TriggerPriority.DEFAULT,
     gag: bool = False,
     callback_param: str = "\\%*",
@@ -65,9 +65,15 @@ def trigger(
 
     gag_flags = "-ag" if gag else ""
     disable_flags = "-c0" if disabled else ""
-    callback_fn_str = get_callback_fn_str(callback)
-    cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} {disable_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
-    # tfprint(cmd)
+
+    if isinstance(callback, Callable):
+        callback_fn_str = get_callback_fn_str(callback)
+        cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} {disable_flags} -t`{pattern}` {callback_fn_str} = /python_call {callback_fn_str} {callback_param}"
+    else:
+        trigger_name = short_hash(pattern)
+        cmd = f"/def -i -F -p{priority} -m{matching} {gag_flags} {disable_flags} -t`{pattern}` {trigger_name} = @{callback}"
+        tfprint(cmd)
+
     tfeval(cmd)
 
 
@@ -99,7 +105,13 @@ def substitute_enumerable(strs: list[str]) -> None:
         tfeval(cmd)
 
 
-def gag(patterns: str | Pattern[str] | list[str | Pattern[str]]) -> None:
+def gag(
+    patterns: str
+    | Pattern[str]
+    | list[str]
+    | list[Pattern[str]]
+    | list[str | Pattern[str]],
+) -> None:
     if not isinstance(patterns, list):
         patterns = [patterns]
     hash = short_hash(str(patterns))
@@ -114,7 +126,7 @@ def gag(patterns: str | Pattern[str] | list[str | Pattern[str]]) -> None:
         else:
             matching = TriggerMatching.SIMPLE
 
-        cmd = f"/def -i -p{priority} -m{matching} -ag -t`{pattern}` gag_{hash}_{n}"
+        cmd = f"/def -i -p{priority} -m{matching} -agG -t`{pattern}` gag_{hash}_{n}"
         tfeval(cmd)
 
 
