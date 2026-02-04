@@ -130,7 +130,7 @@ def gag(
         tfeval(cmd)
 
 
-def parse_level(s: str) -> int | None:
+def parse_level(s: str | None) -> int | None:
     roman_numerals = {
         "I": 101,
         "II": 102,
@@ -153,6 +153,9 @@ def parse_level(s: str) -> int | None:
         "XIX": 119,
         "XX": 120,
     }
+
+    if not s:
+        return None
 
     try:
         return int(s)

@@ -57,8 +57,15 @@ GLOBAL_STATE = State(
 # /trigger You are Astrax, a level I merfolk and your secondary is Ruska.
 
 WHOAMI_RE = re.compile(
-    r"^You are (.+), a level ([^ ]+) (.+?)( and your (primary|secondary) is (.+))?.$"
+    r"^You are (.+), a (level ([^ ]+) )?(.+?)( and your (primary|secondary) is (.+))?.$"
 )
+
+
+def get_state() -> State:
+    """
+    Get the global state object.
+    """
+    return GLOBAL_STATE
 
 
 def whoami_cb(s: str):
@@ -66,7 +73,7 @@ def whoami_cb(s: str):
     if match := WHOAMI_RE.match(s):
         GLOBAL_STATE.char_name = match.group(1)
         GLOBAL_STATE.char_level = parse_level(match.group(2))
-        GLOBAL_STATE.char_race = match.group(3)
+        GLOBAL_STATE.char_race = match.group(4)
 
 
 def get_char_name() -> str | None:
@@ -124,10 +131,10 @@ def cast_use_cb(s: str):
     works, each must have a separate callback function
     """
     global GLOBAL_STATE
-    fields = s.split(" ")
 
-    GLOBAL_STATE.cast_spell = fields[0].replace("_", " ")
-    duration = int(fields[1])
+    # skill or spell name has either spaces or underscores, last word is duration
+    GLOBAL_STATE.cast_spell = " ".join(s.split(" ")[:-1]).replace("_", " ")
+    duration = int(s.split(" ")[-1])
 
     # batclient message has duration 0 if duration is unknown, in that
     # case reduce duration by one or let it stay None
