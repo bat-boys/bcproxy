@@ -3,7 +3,7 @@ Ship navigation
 
 Allows cruising to any coordinates in the same continent.
 
-/def cr = /python_call py.ship.cruise $*
+/def cr = /python_call py.ship.cruise %*
 
 and then you can use /cr 1,2 to cruise to coordinates 1,2
 """
@@ -122,7 +122,7 @@ def cruise(s: str) -> None:
 
 def calculate_path(target: Loc, cur: Loc) -> str:
     x_count = target.x - cur.x
-    y_count = target.y - cur.y + 1
+    y_count = target.y - cur.y
     x_dir = "e"
     y_dir = "s"
 
