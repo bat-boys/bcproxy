@@ -237,8 +237,10 @@ on_close(struct bc_parser *parser)
 					db_add_exit(st->db, st->room, new);
 				buffer_append_str(st->obuf, MARKER "room ");
 				buffer_append_str(st->obuf, new->id);
-				buffer_append_str(st->obuf, " ");
+				buffer_append_str(st->obuf, " area ");
 				buffer_append_str(st->obuf, new->area);
+				buffer_append_str(st->obuf, " direction ");
+				buffer_append_str(st->obuf, new->direction);
 				buffer_append_str(st->obuf, "\n");
 			}
 			room_free(st->room);
